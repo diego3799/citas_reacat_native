@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
-import React, { useState, Fragment } from 'react';
+import React, { useState, Fragment, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -19,25 +19,42 @@ import {
 } from 'react-native';
 import Cita from './components/Cita';
 import Formulario from './components/Formulario';
-
-
+import AsyncStorage from '@react-native-community/async-storage'
 
 const App= () => {
-  const [show,setShow]=useState(true);
-  const [citas,setCitas]=useState([
-    {id:'1', paciente:'Hook', propietario:'Juan', sintomas:'no Come'},
+  const [show,setShow]=useState(false);
+  const [citas,setCitas]=useState([])
+  const borrar=async(id)=>{
+    const nuevo=citas.filter(item=>item.id!==id)
+    setCitas(nuevo);
+    guardarCitasStorage(JSON.stringify(nuevo))
 
-    {id:'2', paciente:'Redux', propietario:'Diego', sintomas:'no duerme'},
-
-    {id:'3', paciente:'Native', propietario:'Luis', sintomas:'no vive'},
-  ])
-  const borrar=(id)=>{object
-    setCitas(citasActuales=>citasActuales.filter(item=>item.id!==id));
   }
-
+  useEffect(()=>{
+    const obtenerCitas=async()=>{
+      try {
+        const r=await AsyncStorage.getItem('citas');
+        if(r){
+          setCitas(JSON.pxarse(r));
+        }
+        // console.log(r)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    obtenerCitas()
+  },[])
+  const guardarCitasStorage=async(citasJson)=>{
+    try {
+      await AsyncStorage.setItem('citas',citasJson)
+    } catch (error) {
+      console.log(error)
+    }
+  }
   const cerrarTeclado=()=>{
     Keyboard.dismiss();
   }
+  
   return (
     <TouchableWithoutFeedback onPress={cerrarTeclado}>
 
@@ -50,7 +67,7 @@ const App= () => {
           {show?(
             <Fragment>
               <Text style={styles.titulo} > Crear Nueva Cita</Text>
-              <Formulario setCitas={setCitas} citas={citas} setShow={setShow}/>
+              <Formulario setCitas={setCitas} guardarCitasStorage={guardarCitasStorage} citas={citas} setShow={setShow}/>
             </Fragment>
           ):(
             <Fragment>
